@@ -61,6 +61,9 @@ ApplicationUI::ApplicationUI() :
     // Initiator for the QNetworkAccessManager
     m_networkAccessManager = new QNetworkAccessManager(this);
 
+    m_progresstoast = new SystemProgressToast(this);
+    m_progresstoast->setBody("Photo upload");
+
     bool res = QObject::connect(m_pLocaleHandler, SIGNAL(systemLanguageChanged()), this, SLOT(onSystemLanguageChanged()));
     // This is only available in Debug builds
     Q_ASSERT(res);
@@ -106,6 +109,8 @@ void ApplicationUI::download(const QString urlFromQml)
 
     // Send the request and save the reply in replyGet pointer
     QNetworkReply* replyGet = m_networkAccessManager->get(request);
+
+    connect(replyGet, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
 
     // Connect the function onReadReply() to the finished() signal of the reply
     connect(replyGet, SIGNAL(finished()), this, SLOT(onReadReply()));
@@ -164,4 +169,19 @@ void ApplicationUI::onReadReply()
         // Memory management
         reply->deleteLater();
     }  // end of : if (reply)
+}
+
+void ApplicationUI::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+{
+    qDebug() << "Download :" << bytesReceived << "/" << bytesTotal;
+    if (((bytesReceived == 0) && (bytesTotal == 0)) || (bytesReceived == bytesTotal)) {
+        m_progresstoast->cancel();
+    }
+    else {
+        int percent = (bytesReceived * 100) / bytesTotal;
+        m_progresstoast->setProgress(percent);
+        m_progresstoast->setStatusMessage(QString::number(percent) + "% ...");
+        m_progresstoast->setState(SystemUiProgressState::Active);
+        m_progresstoast->show();
+    }
 }

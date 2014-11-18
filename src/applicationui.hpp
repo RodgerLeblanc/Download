@@ -19,6 +19,11 @@
 
 #include <QObject>
 
+#include <bb/system/SystemProgressToast>
+#include <bb/system/SystemUiProgressState>
+
+using namespace bb::system;
+
 namespace bb
 {
     namespace cascades
@@ -47,11 +52,14 @@ public:
 private slots:
     void onSystemLanguageChanged();
     void onReadReply();
+    void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
 private:
     QTranslator* m_pTranslator;
     bb::cascades::LocaleHandler* m_pLocaleHandler;
+
     QNetworkAccessManager* m_networkAccessManager;
+    SystemProgressToast* m_progresstoast;
 };
 
 #endif /* ApplicationUI_HPP_ */
